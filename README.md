@@ -1,6 +1,6 @@
-# KNOWLEDGE EDITOR
+# STREAMLIT CSV EDITOR
 
-The KNOWLEDGE Editor is a web-based application built with Python and Streamlit for managing CSV files containing structured data, such as historical events. It provides a user-friendly interface for Create, Read, Update, Delete (CRUD) operations, case-insensitive search, navigation, and clipboard support. The application handles a CSV file (default: `timeline.csv`) with a commented header (`# key,value,tags`) and fully quoted fields, displaying fields without outer quotes in the UI for a cleaner appearance. It ensures data integrity with unique keys, immediate file updates, and robust error handling.
+The Streamlit CSV Editor is a web-based application built with Python and Streamlit for managing CSV files containing structured data, such as historical events. It provides a user-friendly interface for Create, Read, Update, Delete (CRUD) operations, case-insensitive search, navigation, and clipboard support. The application handles a CSV file (default: `timeline.csv`) with a commented header (`# key,value,tags`) and fully quoted fields, displaying fields without outer quotes in the UI for a cleaner appearance. It ensures data integrity with unique keys, immediate file updates, and robust error handling.
 
 ## TABLE OF CONTENTS
 * [Features](#features)
