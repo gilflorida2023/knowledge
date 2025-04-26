@@ -1,7 +1,36 @@
-import streamlit as st
-import csv
+"""
+CSV Editor Application
+
+This module provides a Streamlit-based application for managing CSV files. 
+It allows users to load, search, create, update, and delete records in a CSV file. 
+The application also supports saving changes and copying records to the clipboard.
+
+Features:
+- Load and display CSV data with a predefined schema.
+- Search functionality with case-insensitive filtering.
+- Create, update, and delete records.
+- Save changes to the CSV file with proper formatting.
+- Copy records to the clipboard using JavaScript.
+
+Modules:
+- `load_csv`: Load data from a CSV file, creating it if it doesn't exist.
+- `save_csv`: Save data to a CSV file with a commented header.
+- `search_data`: Search for records matching a given string.
+- `copy_to_clipboard`: Copy text to the clipboard using JavaScript.
+- `main`: The main function that initializes and runs the Streamlit application.
+
+Usage:
+Run this script to launch the CSV Editor application in a web browser.
+
+Raises:
+- Exceptions during file operations or application execution are displayed as\
+    error messages in the UI.
+"""
+# pylint: disable=W0703
 import os
+import csv
 from typing import List, Dict
+import streamlit as st
 from streamlit.components.v1 import html
 
 # Default filename
@@ -12,15 +41,31 @@ FIELDS = ["key", "value", "tags"]
 
 # Load CSV file
 def load_csv(filename: str) -> List[Dict[str, str]]:
+    """
+    Load data from a CSV file.
+
+    If the file does not exist, it creates a new file with a commented header
+    based on the predefined schema and returns an empty list. If the file exists,
+    it reads the data, skipping commented lines, and ensures each row has the
+    required number of columns. Malformed rows are skipped with a warning.
+
+    Args:
+        filename (str): The path to the CSV file.
+
+    Returns:
+        List[Dict[str, str]]: A list of dictionaries representing the rows in the CSV file,
+        where each dictionary maps field names to their corresponding values.
+    """
     try:
         # If file doesn’t exist, create it with commented header
         if not os.path.exists(filename):
-            with open(filename, 'w', newline='') as f:
+            #with open(filename, 'w', newline='utf-8') as f:
+            with open(filename, 'w', encoding='utf-8', newline='') as f:
                 f.write('# ' + ','.join(FIELDS) + '\n')
             return []
 
         # Read file, skipping commented lines
-        with open(filename, 'r', newline='') as csvfile:
+        with open(filename, 'r', encoding='utf-8', newline='') as csvfile:
             reader = csv.reader(csvfile)
             data = []
             for row in reader:
@@ -37,8 +82,23 @@ def load_csv(filename: str) -> List[Dict[str, str]]:
 
 # Save CSV file
 def save_csv(filename: str, data: List[Dict[str, str]]):
+    """
+    Save data to a CSV file.
+
+    Writes the provided data to the specified CSV file. The file will include
+    a commented header based on the predefined schema. Each record in the data
+    is written as a row in the CSV file, with all fields quoted.
+
+    Args:
+        filename (str): The path to the CSV file.
+        data (List[Dict[str, str]]): A list of dictionaries representing the rows to save,
+                                     where each dictionary maps field names to their values.
+
+    Raises:
+        Exception: If an error occurs during the file writing process.
+    """
     try:
-        with open(filename, 'w', newline='') as csvfile:
+        with open(filename, 'w', encoding='utf-8', newline='') as csvfile:
             # Write commented header
             csvfile.write('# ' + ','.join(FIELDS) + '\n')
             writer = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
@@ -49,13 +109,37 @@ def save_csv(filename: str, data: List[Dict[str, str]]):
 
 # Search records
 def search_data(data: List[Dict[str, str]], search_str: str) -> List[Dict[str, str]]:
+    """
+    Search for records in the data that match the search string.
+
+    Filters the provided list of dictionaries to include only those records
+    where any field contains the search string (case-insensitive).
+
+    Args:
+        data (List[Dict[str, str]]): A list of dictionaries representing the data to search.
+        search_str (str): The string to search for in the data.
+
+    Returns:
+        List[Dict[str, str]]: A list of dictionaries that match the search criteria.
+                              If the search string is empty, returns the original data.
+    """
     if not search_str:
         return data
     search_str = search_str.lower()
-    return [record for record in data if any(search_str in field.lower() for field in record.values())]
+    return [record for record in data if any(search_str in field.lower() for \
+                                             field in record.values())]
 
 # Copy text to clipboard
 def copy_to_clipboard(text):
+    """
+    Copy the given text to the clipboard using JavaScript.
+
+    This function uses Streamlit's `html` component to execute a JavaScript
+    snippet that writes the provided text to the user's clipboard.
+
+    Args:
+        text (str): The text to copy to the clipboard.
+    """
     html(f"""
     <script>
     navigator.clipboard.writeText('{text.replace("'", "\\'").replace('\n', '\\n')}');
@@ -64,6 +148,29 @@ def copy_to_clipboard(text):
 
 # Main application
 def main():
+    """
+    Main function for the CSV Editor application.
+
+    This function initializes the Streamlit application, manages the session state,
+    and provides a user interface for loading, searching, creating, updating, and
+    deleting records in a CSV file. It also includes functionality for saving changes
+    and copying records to the clipboard.
+
+    The application supports the following modes:
+    - Read/Search: View and search records.
+    - Create: Add a new record.
+    - Update: Modify an existing record.
+    - Delete: Remove a record.
+
+    The user interface includes:
+    - Filename input for specifying the CSV file.
+    - Search bar for filtering records.
+    - Navigation buttons for moving through records.
+    - Buttons for creating, updating, deleting, saving, and quitting.
+
+    Raises:
+        Exception: If an error occurs during the execution of the application.
+    """
     st.title("CSV Editor")
 
     # Initialize session state
@@ -104,7 +211,8 @@ def main():
     matches = len(filtered_data)
 
     # **SECTION: STATUS_BAR**
-    st.write(f"Mode: {mode} | Filename: {filename} | Lines: {line_count} | Matches: {matches} | Current Line: {current_line + 1 if current_line >= 0 else 0}")
+    st.write(f"Mode: {mode} | Filename: {filename} | Lines: {line_count} | \
+             Matches: {matches} | Current Line: {current_line + 1 if current_line >= 0 else 0}")
 
     # **SECTION: MENU**
     col1, col2, col3, col4, col5, col6 = st.columns(6)
@@ -174,11 +282,14 @@ def main():
                     st.error("Key cannot be empty.")
                 else:
                     original_key = filtered_data[current_line]['key']
-                    if updated_key != original_key and any(record['key'] == updated_key for record in data):
+                    if updated_key != original_key and any(record['key'] == \
+                                                           updated_key for record in data):
                         st.error("Key must be unique.")
                     else:
-                        index = next(i for i, record in enumerate(data) if record['key'] == original_key)
-                        data[index] = {"key": updated_key, "value": updated_value, "tags": updated_tags}
+                        index = next(i for i, record in enumerate(data) if \
+                                     record['key'] == original_key)
+                        data[index] = {"key": updated_key, "value": \
+                                       updated_value, "tags": updated_tags}
                         save_csv(filename, data)
                         st.session_state.data = data
                         st.session_state.filtered_data = search_data(data, search_str)
@@ -199,7 +310,8 @@ def main():
                 save_csv(filename, data)
                 st.session_state.data = data
                 st.session_state.filtered_data = search_data(data, search_str)
-                st.session_state.current_line = min(current_line, len(filtered_data) - 1) if filtered_data else -1
+                st.session_state.current_line = min(current_line, \
+                                len(filtered_data) - 1) if filtered_data else -1
                 st.session_state.mode = 'read/search'
                 st.success("Record deleted.")
                 st.rerun()  # Force rerun to update UI
@@ -239,7 +351,8 @@ def main():
         if mode == 'read/search' and current_line >= 0:
             if st.button("Copy to Clipboard"):
                 record = filtered_data[current_line]
-                text = f'Key: "{record["key"]}"\nValue: "{record["value"]}"\nTags: "{record["tags"]}"'
+                text = f'Key: "{record["key"]}"\nValue: "{record["value"]}"\n\
+                    Tags: "{record["tags"]}"'
                 copy_to_clipboard(text)
                 st.success("Copied to clipboard.")
     else:
@@ -248,7 +361,8 @@ def main():
     # Revert/Reload option
     if st.button("Reload"):
         st.session_state.data = load_csv(filename)
-        st.session_state.filtered_data = search_data(st.session_state.data, st.session_state.search_str)
+        st.session_state.filtered_data = search_data(st.session_state.data, \
+                                                     st.session_state.search_str)
         st.session_state.current_line = 0 if st.session_state.filtered_data else -1
         st.session_state.mode = 'read/search'
         st.success("Data reloaded.")
