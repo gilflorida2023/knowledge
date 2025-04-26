@@ -1,15 +1,41 @@
-import streamlit as st
+#!/usr/bin/env python3
+"""
+Timeline App: A Streamlit application for managing key-value records with tags.
+
+This module provides a web interface to load, edit, and save records in a CSV file
+(timeline.csv) with columns 'key', 'value', and 'tags'. It supports inline editing
+via a DataFrame, saving with comments, and ensures Linux-compatible line endings.
+
+Module Requirements:
+- Python 3.12
+- pandas==2.2.3
+- streamlit
+- csv
+- os
+"""
+#import os
 import csv
-import os
 import pandas as pd
+import streamlit as st
 
-DEFAULT_FILENAME = "timeline.csv"
-FIELDS = ["key", "value", "tags"]
 
-def load_csv(filename):
-    data = []
+DEFAULT_FILENAME: str = "timeline.csv"
+FIELDS: list[str] = ["key", "value", "tags"]
+
+
+def load_csv(filename: str) -> list[dict[str, str]]:
+    """
+    Load records from a CSV file, skipping commented lines.
+
+    Args:
+        filename (str): Path to the CSV file.
+
+    Returns:
+        list[dict[str, str]]: List of records with 'key', 'value', and 'tags'.
+    """
+    data: list[dict[str, str]] = []
     try:
-        with open(filename, "r", newline="") as f:
+        with open(filename, mode="r", encoding="utf-8", newline="") as f:
             reader = csv.reader(f, quoting=csv.QUOTE_ALL)
             for row in reader:
                 if row and row[0].startswith("#"):
@@ -19,19 +45,35 @@ def load_csv(filename):
                 else:
                     st.warning(f"Skipping malformed row: {row}")
     except FileNotFoundError:
-        with open(filename, "w", newline="") as f:
+        with open(filename, mode="w", encoding="utf-8", newline="") as f:
             writer = csv.writer(f, quoting=csv.QUOTE_ALL)
             writer.writerow(["# key,value,tags"])
     return data
 
-def save_csv(filename, data):
-    with open(filename, "w", newline="") as f:
+
+def save_csv(filename: str, data: list[dict[str, str]]) -> None:
+    """
+    Save records to a CSV file with a header comment.
+
+    Args:
+        filename (str): Path to the CSV file.
+        data (list[dict[str, str]]): List of records with 'key', 'value', and 'tags'.
+    """
+    with open(filename, mode="w", encoding="utf-8", newline="") as f:
         writer = csv.writer(f, quoting=csv.QUOTE_ALL)
         writer.writerow(["# key,value,tags"])
         for record in data:
             writer.writerow([record["key"], record["value"], record["tags"]])
 
-def main():
+
+def main() -> None:
+    """
+    Main function to run the Timeline App Streamlit interface.
+
+    Initializes session state, loads CSV data, provides a UI for editing records,
+    and handles saving, quitting, or reloading the data.
+    """
+    # Initialize session state
     if "data" not in st.session_state:
         st.session_state.data = load_csv(DEFAULT_FILENAME)
     if "last_filename" not in st.session_state:
@@ -97,8 +139,9 @@ def main():
         else:
             st.write("No records")
 
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         st.error(f"An error occurred: {str(e)}")
+
 
 if __name__ == "__main__":
     main()
