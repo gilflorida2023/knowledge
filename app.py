@@ -217,24 +217,24 @@ def main():
     # **SECTION: MENU**
     col1, col2, col3, col4, col5, col6 = st.columns(6)
     with col1:
-        if st.button("Create (c)"):
+        if st.button("Create"):
             st.session_state.mode = 'create'
     with col2:
-        if st.button("Update (u)", disabled=current_line < 0):
+        if st.button("Update", disabled=current_line < 0):
             st.session_state.mode = 'update'
     with col3:
-        if st.button("Delete (d)", disabled=current_line < 0):
+        if st.button("Delete", disabled=current_line < 0):
             st.session_state.mode = 'delete'
     with col4:
-        if st.button("Save (s)"):
+        if st.button("Save"):
             save_csv(filename, data)
             st.success("Saved!")
             st.session_state.mode = 'read/search'
     with col5:
-        if st.button("Quit (q)"):
+        if st.button("Quit"):
             st.stop()
     with col6:
-        if st.button("Search (s)"):
+        if st.button("Search"):
             st.session_state.mode = 'read/search'
 
     # **SECTION: CURRENT_RECORD**
