@@ -1,4 +1,4 @@
-# Timeline App
+# Knowldege App
 
 This is a Streamlit application for managing key-value records with tags. It provides a web interface to load, edit, and save records in a CSV file.
 
