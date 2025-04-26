@@ -67,13 +67,6 @@ def main():
             [data-testid="stTable"] td:nth-child(1) {
                 text-align: right !important;
             }
-            /* Ensure 'value' and 'tags' columns (second and third) are left-aligned */
-            [data-testid="stTable"] th:nth-child(2),
-            [data-testid="stTable"] td:nth-child(2),
-            [data-testid="stTable"] th:nth-child(3),
-            [data-testid="stTable"] td:nth-child(3) {
-                text-align: left !important;
-            }
             </style>
         """, unsafe_allow_html=True)
 
