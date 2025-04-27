@@ -13,7 +13,6 @@ Module Requirements:
 - csv
 - os
 """
-#import os
 import csv
 import pandas as pd
 import streamlit as st
