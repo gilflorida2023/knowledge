@@ -1,4 +1,5 @@
 editor
+*.bak
 *.csv
 .vscode/
 venv/
