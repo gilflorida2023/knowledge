@@ -42,48 +42,23 @@ def main() -> None:
     if "status_message" not in st.session_state:
         st.session_state.status_message = ""
 
-    # Handle keyboard shortcuts via URL params
-    params = st.query_params
-    if "action" in params:
-        action = params["action"]
-        if action == "save":
-            save_csv(st.session_state.last_filename, st.session_state.data)
-            st.session_state.status_message = "Saved via Ctrl+S"
-            st.query_params.clear()
-            st.rerun()
-        elif action == "reload":
-            st.session_state.data = load_csv(st.session_state.last_filename)
-            st.session_state.status_message = "Reloaded via Ctrl+R"
-            st.query_params.clear()
-            st.rerun()
-
-    # Add JavaScript for keyboard shortcuts
-    st.markdown("""
-        <script>
-        document.addEventListener('keydown', function(e) {
-            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-                e.preventDefault();
-                window.location.search = "action=save";
-            }
-            if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
-                e.preventDefault();
-                window.location.search = "action=reload";
-            }
-        });
-        </script>
-    """, unsafe_allow_html=True)
-
-    # Status Bar
+    # Status Bar with save button
     status_text = f"{st.session_state.last_filename} | {len(st.session_state.data)}"
     if st.session_state.status_message:
         status_text += f" | {st.session_state.status_message}"
-    status_text += " | [Ctrl+S to Save] [Ctrl+R to Reload]"
     
-    st.markdown(f"""
-        <div style="font-family: monospace; margin: 0; padding: 0.5rem 1rem; background: #f0f2f6;">
-            {status_text}
-        </div>
-    """, unsafe_allow_html=True)
+    col1, col2 = st.columns([8, 1])
+    with col1:
+        st.markdown(f"""
+            <div style="font-family: monospace; margin: 0; padding: 0.5rem 1rem; background: #f0f2f6;">
+                {status_text}
+            </div>
+        """, unsafe_allow_html=True)
+    with col2:
+        if st.button("💾", help="Save"):
+            save_csv(st.session_state.last_filename, st.session_state.data)
+            st.session_state.status_message = "Saved"
+            st.rerun()
 
     st.markdown("""
         <style>
