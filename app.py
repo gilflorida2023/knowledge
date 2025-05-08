@@ -74,10 +74,10 @@ def main() -> None:
     """, unsafe_allow_html=True)
 
     # Status Bar
-    status_text = f"Filename: {st.session_state.last_filename} | Lines: {len(st.session_state.data)}"
+    status_text = f"{st.session_state.last_filename} | {len(st.session_state.data)}"
     if st.session_state.status_message:
         status_text += f" | {st.session_state.status_message}"
-    status_text += " | Shortcuts: Ctrl+S to Save, Ctrl+R to Reload"
+    status_text += " | [Ctrl+S to Save] [Ctrl+R to Reload]"
     
     st.markdown(f"""
         <div style="font-family: monospace; margin: 0; padding: 0.5rem 1rem; background: #f0f2f6;">
