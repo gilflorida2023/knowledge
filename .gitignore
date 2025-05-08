@@ -1,4 +1,5 @@
 editor
+*.jpg
 *.png
 *.bak
 *.csv
