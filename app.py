@@ -7,6 +7,7 @@ Features:
 - Provides a data editor interface for managing records
 - Validates for duplicate keys
 - Displays status information including filename and record count
+- Includes a sidebar menu with save options
 """
 
 import csv
@@ -19,18 +20,6 @@ FIELDS: list[str] = ["key", "value", "tags"]
 def load_csv(filename: str) -> list[dict[str, str]]:
     '''
     Load CSV file from disk into a list of dictionaries.
-    
-    Args:
-        filename: Path to the CSV file to load
-        
-    Returns:
-        List of dictionaries where each dictionary represents a record with keys:
-        "key", "value", and "tags"
-        
-    Notes:
-        - Skips rows starting with '#' (comments)
-        - Skips malformed rows that don't have exactly 3 columns
-        - Creates a new file with header if the file doesn't exist
     '''
     data: list[dict[str, str]] = []
     try:
@@ -52,36 +41,18 @@ def load_csv(filename: str) -> list[dict[str, str]]:
 def save_csv(filename: str, data: list[dict[str, str]]) -> None:
     '''
     Save data to a CSV file on disk.
-    
-    Args:
-        filename: Path to the CSV file to save to
-        data: List of dictionaries where each dictionary represents a record
-        
-    Notes:
-        - Writes a comment header line starting with '#'
-        - Quotes all fields and escapes special characters
     '''
     with open(filename, mode="w", encoding="utf-8", newline="") as f:
         writer = csv.writer(f, quoting=csv.QUOTE_ALL)
         writer.writerow(["# key,value,tags"])
         for record in data:
             writer.writerow([record["key"], record["value"], record["tags"]])
+    st.session_state.status_message = f"Saved to {filename}"
+    st.session_state.last_filename = filename
 
 def main() -> None:
     '''
     Main application function that manages the Streamlit interface.
-    
-    Features:
-    - Initializes session state for data, filename, and status message
-    - Displays a status bar with filename, record count, and status messages
-    - Provides a save button that persists changes to disk
-    - Shows an editable table of key-value-tag records
-    - Validates for duplicate keys when editing data
-    
-    The interface includes:
-    - A status bar showing current file and record count
-    - A save button (💾) to persist changes
-    - An editable data table with columns: Key, Value, Tags
     '''
     if "data" not in st.session_state:
         st.session_state.data = load_csv(DEFAULT_FILENAME)
@@ -90,33 +61,35 @@ def main() -> None:
     if "status_message" not in st.session_state:
         st.session_state.status_message = ""
 
-    # Status Bar with save button
-    status_text = f"{st.session_state.last_filename} | {len(st.session_state.data)}"
-    if st.session_state.status_message:
-        status_text += f" | {st.session_state.status_message}"
-
-    col1, col2 = st.columns([8, 1])
-    with col1:
-        st.markdown(f"""
-            <div style="font-family: monospace; margin: 0; padding: 0.5rem 1rem; background: #f0f2f6;">
-                {status_text}
-            </div>
-        """, unsafe_allow_html=True)
-    with col2:
-        if st.button("💾", help="Save"):
+    # Sidebar Menu
+    with st.sidebar:
+        st.title("Menu")
+        st.subheader("File Operations")
+        
+        # Save options
+        if st.button("💾 Save to Current File", help="Save to current file"):
             save_csv(st.session_state.last_filename, st.session_state.data)
-            st.session_state.status_message = "Saved"
             st.rerun()
+        
+        if st.button("💾 Save As...", help="Save to a new file"):
+            new_filename = st.text_input("New filename:", value=st.session_state.last_filename)
+            if new_filename and st.button("Confirm Save"):
+                if not new_filename.endswith('.csv'):
+                    new_filename += '.csv'
+                save_csv(new_filename, st.session_state.data)
+                st.rerun()
+        
+        st.divider()
+        st.subheader("Current File")
+        st.write(f"Filename: {st.session_state.last_filename}")
+        st.write(f"Records: {len(st.session_state.data)}")
+        
+        if st.session_state.status_message:
+            st.info(st.session_state.status_message)
 
-    st.markdown("""
-        <style>
-        [data-testid="stTable"] th:nth-child(1),
-        [data-testid="stTable"] td:nth-child(1) {
-            text-align: right !important;
-        }
-        </style>
-    """, unsafe_allow_html=True)
-
+    # Main content area
+    st.title("Knowledge App")
+    
     if st.session_state.data:
         df = pd.DataFrame(st.session_state.data)
         edited_df = st.data_editor(
