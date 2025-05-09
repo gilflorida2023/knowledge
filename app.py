@@ -7,7 +7,8 @@ import csv
 import pandas as pd
 import streamlit as st
 
-DEFAULT_FILENAME: str = "timeline.csv"
+#DEFAULT_FILENAME: str = "timeline.csv"
+DEFAULT_FILENAME: str = "melon.csv"
 FIELDS: list[str] = ["key", "value", "tags"]
 
 def load_csv(filename: str) -> list[dict[str, str]]:
