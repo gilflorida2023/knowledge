@@ -25,7 +25,7 @@ Follow these steps to set up and run the application:
 
 ## Application Description
 
-The Timeline App allows users to manage data stored in a CSV file named `timeline.csv`. The application provides an interactive interface using Streamlit where users can view, edit, add, and delete records. The data is displayed in a table format, enabling inline editing. The application handles loading data from the CSV, skipping commented lines, and saving the modified data back to the file. It also includes basic validation to ensure that keys are unique.
+The Knowledge App allows users to manage data stored in a CSV file named `timeline.csv`. The application provides an interactive interface using Streamlit where users can view, edit, add, and delete records. The data is displayed in a table format, enabling inline editing. The application handles loading data from the CSV, skipping commented lines, and saving the modified data back to the file. It also includes basic validation to ensure that keys are unique.
 
 ## CSV File Organization
 
