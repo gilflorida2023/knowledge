@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Timeline App: A Streamlit application for managing key-value records with tags.
+Knowledge App: A Streamlit application for managing key-value records with tags.
 """
 import csv
 import pandas as pd
@@ -10,6 +10,9 @@ DEFAULT_FILENAME: str = "timeline.csv"
 FIELDS: list[str] = ["key", "value", "tags"]
 
 def load_csv(filename: str) -> list[dict[str, str]]:
+    '''
+    load and validate csv file from disk into list dictionary.
+    '''
     data: list[dict[str, str]] = []
     try:
         with open(filename, mode="r", encoding="utf-8", newline="") as f:
@@ -28,6 +31,7 @@ def load_csv(filename: str) -> list[dict[str, str]]:
     return data
 
 def save_csv(filename: str, data: list[dict[str, str]]) -> None:
+    ''' save csv file, quoting each field and escaping special characters.'''
     with open(filename, mode="w", encoding="utf-8", newline="") as f:
         writer = csv.writer(f, quoting=csv.QUOTE_ALL)
         writer.writerow(["# key,value,tags"])
@@ -35,6 +39,9 @@ def save_csv(filename: str, data: list[dict[str, str]]) -> None:
             writer.writerow([record["key"], record["value"], record["tags"]])
 
 def main() -> None:
+    '''
+    ensure csv contains unique keys.Loads file.
+    '''
     if "data" not in st.session_state:
         st.session_state.data = load_csv(DEFAULT_FILENAME)
     if "last_filename" not in st.session_state:
@@ -46,7 +53,7 @@ def main() -> None:
     status_text = f"{st.session_state.last_filename} | {len(st.session_state.data)}"
     if st.session_state.status_message:
         status_text += f" | {st.session_state.status_message}"
-    
+
     col1, col2 = st.columns([8, 1])
     with col1:
         st.markdown(f"""
