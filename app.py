@@ -1,7 +1,14 @@
 #!/usr/bin/env python3
 """
 Knowledge App: A Streamlit application for managing key-value records with tags.
+
+Features:
+- Loads and saves data to/from a CSV file
+- Provides a data editor interface for managing records
+- Validates for duplicate keys
+- Displays status information including filename and record count
 """
+
 import csv
 import pandas as pd
 import streamlit as st
@@ -11,7 +18,19 @@ FIELDS: list[str] = ["key", "value", "tags"]
 
 def load_csv(filename: str) -> list[dict[str, str]]:
     '''
-    load and validate csv file from disk into list dictionary.
+    Load CSV file from disk into a list of dictionaries.
+    
+    Args:
+        filename: Path to the CSV file to load
+        
+    Returns:
+        List of dictionaries where each dictionary represents a record with keys:
+        "key", "value", and "tags"
+        
+    Notes:
+        - Skips rows starting with '#' (comments)
+        - Skips malformed rows that don't have exactly 3 columns
+        - Creates a new file with header if the file doesn't exist
     '''
     data: list[dict[str, str]] = []
     try:
@@ -31,7 +50,17 @@ def load_csv(filename: str) -> list[dict[str, str]]:
     return data
 
 def save_csv(filename: str, data: list[dict[str, str]]) -> None:
-    ''' save csv file, quoting each field and escaping special characters.'''
+    '''
+    Save data to a CSV file on disk.
+    
+    Args:
+        filename: Path to the CSV file to save to
+        data: List of dictionaries where each dictionary represents a record
+        
+    Notes:
+        - Writes a comment header line starting with '#'
+        - Quotes all fields and escapes special characters
+    '''
     with open(filename, mode="w", encoding="utf-8", newline="") as f:
         writer = csv.writer(f, quoting=csv.QUOTE_ALL)
         writer.writerow(["# key,value,tags"])
@@ -40,7 +69,19 @@ def save_csv(filename: str, data: list[dict[str, str]]) -> None:
 
 def main() -> None:
     '''
-    ensure csv contains unique keys.Loads file.
+    Main application function that manages the Streamlit interface.
+    
+    Features:
+    - Initializes session state for data, filename, and status message
+    - Displays a status bar with filename, record count, and status messages
+    - Provides a save button that persists changes to disk
+    - Shows an editable table of key-value-tag records
+    - Validates for duplicate keys when editing data
+    
+    The interface includes:
+    - A status bar showing current file and record count
+    - A save button (💾) to persist changes
+    - An editable data table with columns: Key, Value, Tags
     '''
     if "data" not in st.session_state:
         st.session_state.data = load_csv(DEFAULT_FILENAME)
