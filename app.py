@@ -1,13 +1,6 @@
 #!/usr/bin/env python3
 """
 Knowledge App: A Streamlit application for managing key-value records with tags.
-
-Features:
-- Loads and saves data to/from a CSV file
-- Provides a data editor interface for managing records
-- Validates for duplicate keys
-- Displays status information including filename and record count
-- Includes a sidebar menu with save options
 """
 
 import csv
@@ -18,9 +11,7 @@ DEFAULT_FILENAME: str = "timeline.csv"
 FIELDS: list[str] = ["key", "value", "tags"]
 
 def load_csv(filename: str) -> list[dict[str, str]]:
-    '''
-    Load CSV file from disk into a list of dictionaries.
-    '''
+    '''Load CSV file from disk into a list of dictionaries.'''
     data: list[dict[str, str]] = []
     try:
         with open(filename, mode="r", encoding="utf-8", newline="") as f:
@@ -39,9 +30,7 @@ def load_csv(filename: str) -> list[dict[str, str]]:
     return data
 
 def save_csv(filename: str, data: list[dict[str, str]]) -> None:
-    '''
-    Save data to a CSV file on disk.
-    '''
+    '''Save data to a CSV file on disk.'''
     with open(filename, mode="w", encoding="utf-8", newline="") as f:
         writer = csv.writer(f, quoting=csv.QUOTE_ALL)
         writer.writerow(["# key,value,tags"])
@@ -51,34 +40,47 @@ def save_csv(filename: str, data: list[dict[str, str]]) -> None:
     st.session_state.last_filename = filename
 
 def main() -> None:
-    '''
-    Main application function that manages the Streamlit interface.
-    '''
+    '''Main application function.'''
+    # Initialize session state
     if "data" not in st.session_state:
         st.session_state.data = load_csv(DEFAULT_FILENAME)
     if "last_filename" not in st.session_state:
         st.session_state.last_filename = DEFAULT_FILENAME
     if "status_message" not in st.session_state:
         st.session_state.status_message = ""
+    if "force_reload" not in st.session_state:
+        st.session_state.force_reload = False
+
+    # Handle forced reload
+    if st.session_state.force_reload:
+        st.session_state.data = load_csv(st.session_state.last_filename)
+        st.session_state.status_message = f"Reloaded from {st.session_state.last_filename}"
+        st.session_state.force_reload = False
+        st.rerun()
 
     # Sidebar Menu
     with st.sidebar:
         st.title("Menu")
         st.subheader("File Operations")
         
-        # Save options
-        if st.button("💾 Save to Current File", help="Save to current file"):
-            save_csv(st.session_state.last_filename, st.session_state.data)
-            st.rerun()
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("💾", help="Save to current file"):
+                save_csv(st.session_state.last_filename, st.session_state.data)
+                st.session_state.force_reload = True  # Trigger reload after save
         
-        if st.button("💾 Save As...", help="Save to a new file"):
+        with col2:
+            if st.button("🔄", help="Reload from disk"):
+                st.session_state.force_reload = True  # Trigger reload
+        
+        if st.button("💾❓", help="Save As [new file name]"):
             new_filename = st.text_input("New filename:", value=st.session_state.last_filename)
             if new_filename and st.button("Confirm Save"):
                 if not new_filename.endswith('.csv'):
                     new_filename += '.csv'
                 save_csv(new_filename, st.session_state.data)
-                st.rerun()
-        
+                st.session_state.force_reload = True  # Trigger reload after save
+
         st.divider()
         st.subheader("Current File")
         st.write(f"Filename: {st.session_state.last_filename}")
