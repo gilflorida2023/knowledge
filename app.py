@@ -4,10 +4,10 @@ Knowledge App: A Streamlit application for managing key-value records with tags.
 """
 
 import csv
+import re
 import pandas as pd
 import streamlit as st
 
-#DEFAULT_FILENAME: str = "timeline.csv"
 DEFAULT_FILENAME: str = "melon.csv"
 FIELDS: list[str] = ["key", "value", "tags"]
 
@@ -51,6 +51,8 @@ def main() -> None:
         st.session_state.status_message = ""
     if "force_reload" not in st.session_state:
         st.session_state.force_reload = False
+    if "filtered_data" not in st.session_state:
+        st.session_state.filtered_data = []
 
     # Handle forced reload
     if st.session_state.force_reload:
@@ -96,8 +98,39 @@ def main() -> None:
     # Main content area
     st.title("Knowledge App")
     
-    if st.session_state.data:
-        df = pd.DataFrame(st.session_state.data)
+    # Search functionality
+    with st.expander("🔍 Search Options", expanded=True):
+        search_mode = st.radio(
+            "Search Mode",
+            ["Basic", "Regex"],
+            horizontal=True,
+            label_visibility="collapsed"
+        )
+        
+        search_term = st.text_input("Search term", "")
+        
+        if search_term:
+            if search_mode == "Basic":
+                st.session_state.filtered_data = [
+                    item for item in st.session_state.data
+                    if search_term.lower() in item["key"].lower()
+                    or search_term.lower() in item["value"].lower()
+                ]
+            elif search_mode == "Regex":
+                try:
+                    st.session_state.filtered_data = [
+                        item for item in st.session_state.data
+                        if re.search(search_term, item["key"], re.IGNORECASE)
+                        or re.search(search_term, item["value"], re.IGNORECASE)
+                    ]
+                except re.error:
+                    st.error("Invalid regular expression pattern")
+                    st.session_state.filtered_data = st.session_state.data
+        else:
+            st.session_state.filtered_data = st.session_state.data
+    
+    if st.session_state.filtered_data:
+        df = pd.DataFrame(st.session_state.filtered_data)
         edited_df = st.data_editor(
             df,
             num_rows="dynamic",
@@ -117,7 +150,7 @@ def main() -> None:
         else:
             st.session_state.data = new_data
     else:
-        st.write("No records")
+        st.write("No records matching search criteria")
 
 if __name__ == "__main__":
     main()
