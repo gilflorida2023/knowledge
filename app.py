@@ -63,23 +63,26 @@ def main() -> None:
         st.title("Menu")
         st.subheader("File Operations")
         
-        col1, col2 = st.columns(2)
-        with col1:
+        # Create a tight row for buttons
+        button_row = st.columns([1, 1, 2])  # Adjust widths as needed
+        
+        with button_row[0]:
             if st.button("💾", help="Save to current file"):
                 save_csv(st.session_state.last_filename, st.session_state.data)
-                st.session_state.force_reload = True  # Trigger reload after save
+                st.session_state.force_reload = True
         
-        with col2:
+        with button_row[1]:
             if st.button("🔄", help="Reload from disk"):
-                st.session_state.force_reload = True  # Trigger reload
+                st.session_state.force_reload = True
         
-        if st.button("💾❓", help="Save As [new file name]"):
-            new_filename = st.text_input("New filename:", value=st.session_state.last_filename)
-            if new_filename and st.button("Confirm Save"):
-                if not new_filename.endswith('.csv'):
-                    new_filename += '.csv'
-                save_csv(new_filename, st.session_state.data)
-                st.session_state.force_reload = True  # Trigger reload after save
+        with button_row[2]:
+            if st.button("💾❓", help="Save As [new file name]"):
+                new_filename = st.text_input("New filename:", value=st.session_state.last_filename)
+                if new_filename and st.button("Confirm Save"):
+                    if not new_filename.endswith('.csv'):
+                        new_filename += '.csv'
+                    save_csv(new_filename, st.session_state.data)
+                    st.session_state.force_reload = True
 
         st.divider()
         st.subheader("Current File")
