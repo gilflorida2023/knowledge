@@ -2,6 +2,6 @@ editor
 *.jpg
 *.png
 *.bak
-*.csv
+timeline.csv
 .vscode/
 venv/
