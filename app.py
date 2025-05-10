@@ -7,6 +7,7 @@ import csv
 import re
 import pandas as pd
 import streamlit as st
+from collections import defaultdict
 
 DEFAULT_FILENAME: str = "melon.csv"
 FIELDS: list[str] = ["key", "value", "tags"]
@@ -53,12 +54,15 @@ def main() -> None:
         st.session_state.force_reload = False
     if "filtered_data" not in st.session_state:
         st.session_state.filtered_data = []
+    if "duplicates_reported" not in st.session_state:
+        st.session_state.duplicates_reported = False
 
     # Handle forced reload
     if st.session_state.force_reload:
         st.session_state.data = load_csv(st.session_state.last_filename)
         st.session_state.status_message = f"Reloaded from {st.session_state.last_filename}"
         st.session_state.force_reload = False
+        st.session_state.duplicates_reported = False
         st.rerun()
 
     # Sidebar Menu
@@ -66,8 +70,7 @@ def main() -> None:
         st.title("Menu")
         st.subheader("File Operations")
         
-        # Create a tight row for buttons
-        button_row = st.columns([1, 1, 2])  # Adjust widths as needed
+        button_row = st.columns([1, 1, 2])
         
         with button_row[0]:
             if st.button("💾", help="Save to current file"):
@@ -92,7 +95,11 @@ def main() -> None:
         st.write(f"Filename: {st.session_state.last_filename}")
         st.write(f"Records: {len(st.session_state.data)}")
         
-        if st.session_state.status_message:
+        # Show duplicate error if we just detected duplicates
+        if st.session_state.get('show_duplicate_error', False):
+            st.error("Duplicate keys detected! See console for details.")
+            st.session_state.show_duplicate_error = False  # Only show once
+        elif st.session_state.status_message:
             st.info(st.session_state.status_message)
 
     # Main content area
@@ -144,11 +151,28 @@ def main() -> None:
         )
         new_data = edited_df.to_dict("records")
         keys = [record["key"] for record in new_data]
+        
+        # Check for duplicates
         if len(keys) != len(set(keys)):
-            st.session_state.status_message = "Error: Duplicate keys"
-            st.rerun()
+            key_indices = defaultdict(list)
+            for idx, key in enumerate(keys):
+                key_indices[key].append(idx + 1)  # 1-based record numbers
+            
+            duplicates = {k: v for k, v in key_indices.items() if len(v) > 1}
+            
+            # Print to console and show sidebar error exactly once
+            if not st.session_state.duplicates_reported:
+                print("\n=== DUPLICATE KEYS DETECTED ===")
+                for key, records in sorted(duplicates.items()):
+                    print(f"Key: '{key}' appears in records: {', '.join(map(str, records))}")
+                print("===============================\n")
+                
+                st.session_state.duplicates_reported = True
+                st.session_state.show_duplicate_error = True
+                st.rerun()  # Force update to show sidebar error
         else:
             st.session_state.data = new_data
+            st.session_state.duplicates_reported = False
     else:
         st.write("No records matching search criteria")
 
