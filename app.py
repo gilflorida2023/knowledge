@@ -147,9 +147,14 @@ def main() -> None:
                 "key": st.column_config.TextColumn("Key", required=True),
                 "value": st.column_config.TextColumn("Value"),
                 "tags": st.column_config.TextColumn("Tags")
-            }
+            },
+            hide_index=False  # Ensures the checkboxes for deletion are visible
         )
-        new_data = edited_df.to_dict("records")
+        
+        # Get edited data and filter out deleted rows
+        edited_data = edited_df.to_dict("records")
+        new_data = [record for record in edited_data if None not in record.values()]
+        
         keys = [record["key"] for record in new_data]
         
         # Check for duplicates
