@@ -4,6 +4,7 @@ Knowledge App: A Streamlit application for managing key-value records with tags.
 """
 
 import csv
+from collections import defaultdict
 import pandas as pd
 import streamlit as st
 
@@ -50,6 +51,8 @@ def main() -> None:
         st.session_state.status_message = ""
     if "force_reload" not in st.session_state:
         st.session_state.force_reload = False
+    if "duplicates_reported" not in st.session_state:
+        st.session_state.duplicates_reported = False
 
     # Handle forced reload
     if st.session_state.force_reload:
@@ -101,13 +104,33 @@ def main() -> None:
         )
         new_data = edited_df.to_dict("records")
         keys = [record["key"] for record in new_data]
+
+        #if len(keys) != len(set(keys)):
+            #st.session_state.status_message = "Error: Duplicate keys"
+            #st.rerun()
+        #else:
+            #st.session_state.data = new_data
+    #else:
+        #st.write("No records")
+        # Check for duplicates
         if len(keys) != len(set(keys)):
-            st.session_state.status_message = "Error: Duplicate keys"
-            st.rerun()
+            key_indices = defaultdict(list)
+            for idx, key in enumerate(keys):
+                key_indices[key].append(idx + 1)  # 1-based record numbers
+            duplicates = {k: v for k, v in key_indices.items() if len(v) > 1}
+            # Print to console and show sidebar error exactly once
+            if not st.session_state.duplicates_reported:
+                print("\n=== DUPLICATE KEYS DETECTED ===")
+                for key, records in sorted(duplicates.items()):
+                    print(f"Key: '{key}' appears in records: {', '.join(map(str, records))}")
+                print("===============================\n")
+                st.session_state.duplicates_reported = True
+                st.session_state.show_duplicate_error = True
+                st.rerun()  # Force update to show sidebar error
         else:
             st.session_state.data = new_data
+            st.session_state.duplicates_reported = False
     else:
-        st.write("No records")
-
+        st.write("No records matching search criteria")
 if __name__ == "__main__":
     main()
