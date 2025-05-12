@@ -30,16 +30,6 @@ def load_csv(filename: str) -> list[dict[str, str]]:
             writer.writerow(["# key,value,tags"])
     return data
 
-def save_csv(filename: str, data: list[dict[str, str]]) -> None:
-    '''Save data to a CSV file on disk.'''
-    with open(filename, mode="w", encoding="utf-8", newline="") as f:
-        writer = csv.writer(f, quoting=csv.QUOTE_ALL)
-        writer.writerow(["# key,value,tags"])
-        for record in data:
-            writer.writerow([record["key"], record["value"], record["tags"]])
-    st.session_state.status_message = f"Saved to {filename}"
-    st.session_state.last_filename = filename
-
 def main() -> None:
     '''Main application function.'''
     # Initialize session state
@@ -53,46 +43,26 @@ def main() -> None:
         st.session_state.force_reload = False
     if "duplicates_reported" not in st.session_state:
         st.session_state.duplicates_reported = False
+    if "df" not in st.session_state:
+        st.session_state.df = pd.DataFrame(st.session_state.data)
 
     # Handle forced reload
     if st.session_state.force_reload:
         st.session_state.data = load_csv(st.session_state.last_filename)
+        st.session_state.df = pd.DataFrame(st.session_state.data)
         st.session_state.status_message = f"Reloaded from {st.session_state.last_filename}"
         st.session_state.force_reload = False
         st.rerun()
 
-    # Sidebar Menu
-    with st.sidebar:
-        st.title("Menu")
-        st.subheader("File Operations")
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("💾", help="Save to current file"):
-                save_csv(st.session_state.last_filename, st.session_state.data)
-                st.session_state.force_reload = True  # Trigger reload after save
-        with col2:
-            if st.button("🔄", help="Reload from disk"):
-                st.session_state.force_reload = True  # Trigger reload
-        if st.button("💾❓", help="Save As [new file name]"):
-            new_filename = st.text_input("New filename:", value=st.session_state.last_filename)
-            if new_filename and st.button("Confirm Save"):
-                if not new_filename.endswith('.csv'):
-                    new_filename += '.csv'
-                save_csv(new_filename, st.session_state.data)
-                st.session_state.force_reload = True  # Trigger reload after save
-        st.divider()
-        st.subheader("Current File")
-        st.write(f"Filename: {st.session_state.last_filename}")
-        st.write(f"Records: {len(st.session_state.data)}")
-        if st.session_state.status_message:
-            st.info(st.session_state.status_message)
-
     # Main content area
     st.title("Knowledge App")
-    if st.session_state.data:
-        df = pd.DataFrame(st.session_state.data)
+    
+    if not st.session_state.data:
+        st.write("No records found")
+    else:
+        # Display data editor
         edited_df = st.data_editor(
-            df,
+            st.session_state.df,
             num_rows="dynamic",
             key="data_editor",
             use_container_width=True,
@@ -102,17 +72,11 @@ def main() -> None:
                 "tags": st.column_config.TextColumn("Tags")
             }
         )
+        
+        # Check for duplicate keys
         new_data = edited_df.to_dict("records")
         keys = [record["key"] for record in new_data]
 
-        #if len(keys) != len(set(keys)):
-            #st.session_state.status_message = "Error: Duplicate keys"
-            #st.rerun()
-        #else:
-            #st.session_state.data = new_data
-    #else:
-        #st.write("No records")
-        # Check for duplicates
         if len(keys) != len(set(keys)):
             key_indices = defaultdict(list)
             for idx, key in enumerate(keys):
@@ -129,8 +93,17 @@ def main() -> None:
                 st.rerun()  # Force update to show sidebar error
         else:
             st.session_state.data = new_data
+            st.session_state.df = pd.DataFrame(new_data)
             st.session_state.duplicates_reported = False
-    else:
-        st.write("No records matching search criteria")
+
+    # Sidebar Menu
+    with st.sidebar:
+        #st.divider()
+        st.subheader("Current File")
+        st.write(f"Filename: {st.session_state.last_filename}")
+        st.write(f"Records: {len(st.session_state.data)}")
+        if st.session_state.status_message:
+            st.info(st.session_state.status_message)
+
 if __name__ == "__main__":
     main()
